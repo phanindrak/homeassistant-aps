@@ -1,0 +1,23 @@
+[tool.poetry]
+package-mode = false
+
+[project]
+name = "aps-energy"
+version = "0.1.0"
+description = "Home Assistant integration for Arizona Public Service energy monitoring"
+authors = [
+    {name = "Phani"}
+]
+readme = "README.md"
+requires-python = "^3.10"
+dependencies = [
+    "aiohttp (>=3.13.3,<4.0.0)",
+    "cryptography (>=46.0.5,<47.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+    "playwright (>=1.58.0,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
