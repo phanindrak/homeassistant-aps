@@ -1,0 +1,85 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to APS",
+                "description": "Enter your APS (Arizona Public Service) account credentials. These are the same credentials you use to sign in to the APS website or mobile app.",
+                "data": {
+                    "username": "Email address",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "username": "The email address associated with your APS account.",
+                    "password": "The password you use to sign in to your APS account."
+                }
+            },
+            "select_addresses": {
+                "title": "Service Addresses",
+                "description": "We found {count} service addresses on your account. Please select the ones you want to add to Home Assistant.\n\nYou can add both active and inactive (historical) addresses.",
+                "data": {
+                    "selected_addresses": "Service Addresses"
+                },
+                "data_description": {
+                    "selected_addresses": "Check all addresses you want to monitor. You can change this later in the integration options."
+                }
+            },
+            "configure_address": {
+                "title": "Configure {address} ({current} of {total})",
+                "description": "Set up how you want to track this service address. Friendly names will be used to prefix all sensors for this location.",
+                "data": {
+                    "friendly_name": "Friendly Name",
+                    "import_mode": "Data Import Strategy"
+                },
+                "data_description": {
+                    "friendly_name": "A short, unique name for this location (e.g., 'Home' or 'Cabin').",
+                    "import_mode": "Choose how much data to bring into Home Assistant. 'Full history' can take several minutes to complete in the background."
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to APS. Check your network connection.",
+            "invalid_auth": "Invalid email address or password.",
+            "unknown": "Unexpected error — check the Home Assistant logs.",
+            "select_one_address": "Please select at least one address to monitor.",
+            "name_required": "Friendly name cannot be empty.",
+            "name_conflict": "This name is already in use. Please choose a unique name.",
+            "name_exists": "An address with this name is already configured."
+        },
+        "abort": {
+            "already_configured": "APS account is already configured.",
+            "cannot_connect": "Cannot connect to APS to load address information."
+        }
+    },
+    "options": {
+        "step": {
+            "select_addresses": {
+                "title": "Update Monitored Addresses",
+                "description": "Add or remove service addresses from your Home Assistant integration. Any addresses you unselect will have their entities removed.",
+                "data": {
+                    "selected_addresses": "Service Addresses"
+                },
+                "data_description": {
+                    "selected_addresses": "Add or remove addresses from the currently monitored set."
+                }
+            },
+            "configure_address": {
+                "title": "Update {address} ({current} of {total})",
+                "description": "Update the settings for this service address. Changing the friendly name may affect your entity IDs.",
+                "data": {
+                    "friendly_name": "Friendly Name",
+                    "import_mode": "Data Import Strategy"
+                },
+                "data_description": {
+                    "friendly_name": "Change the short name for this location.",
+                    "import_mode": "Choose whether to backfill historical data for this address if you haven't done so yet."
+                }
+            }
+        },
+        "error": {
+            "select_one_address": "Please select at least one address to monitor.",
+            "name_required": "Friendly name cannot be empty.",
+            "name_conflict": "This name is already in use. Please choose a unique name.",
+            "cannot_connect": "Cannot connect to APS to refresh address information."
+        }
+    }
+}

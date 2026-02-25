@@ -1,14 +1,22 @@
 # APS Energy Integration
 
-A Home Assistant custom integration for monitoring energy usage and billing data from Arizona Public Service (APS).
+A Home Assistant custom integration for monitoring energy usage, billing data, and real-time Time-of-Use periods from Arizona Public Service (APS).
 
 ## Features
 
-- **Current Balance**: Monitor your outstanding account balance.
-- **Latest Bill Sensors**: Tracks your most recent bill amount, date, and billing period.
-- **Estimated Charges**: Real-time month-to-date cost estimates (for accounts with AMI meters), including on-peak and off-peak breakdowns.
+- **Multi-Address Support**: Automatically discover and monitor multiple service addresses (active and inactive) from a single APS account.
+- **Granular Energy Usage**: Sensor data for daily and monthly kWh consumption.
+- **Time-of-Use (ToU) Intelligence**:
+    - Automatic detection of ToU rate plans.
+    - Energy and cost breakdowns for On-Peak, Off-Peak, and Super Off-Peak periods.
+    - (Planned) Real-time ToU period sensors via local rate engine.
+- **Historical Data Backfill**: Automatically imports years of historical daily usage and billing data into Home Assistant's long-term statistics for display in the Energy Dashboard.
+- **Detailed Billing Info**:
+    - **Current Balance**: Monitor your outstanding account balance.
+    - **Latest Bill Sensors**: Tracks your most recent bill amount and date per service address.
+    - **Estimated Charges**: Real-time month-to-date cost estimates (for accounts with AMI meters).
+- **Premium UI Experience**: User-friendly multi-step configuration flow with friendly name assignment and descriptive instructions.
 - **Secure Authentication**: Uses native RSA encryption to communicate directly with APS Portal APIs.
-- **Auto-Discovery**: Automatically identifies active service addresses and account details during setup.
 
 ## Project Structure
 
@@ -18,7 +26,7 @@ A Home Assistant custom integration for monitoring energy usage and billing data
 │   └── aps_energy/        # Core Home Assistant integration
 ├── docs/                 # Detailed documentation and test guides
 ├── docker-compose.yml    # Standalone test environment
-├── pyproject.toml        # Dependency management (Poetry)
+├── pyproject.yml         # Dependency management (Poetry)
 └── poetry.lock
 ```
 
@@ -51,7 +59,8 @@ To use this in your main Home Assistant instance:
 
 ## Implementation Details
 
-The integration reverse-engineers the following APS Portal endpoints:
+The integration reverse-engineers the following APS APIs:
 - `GetAllUserDetails`: For account and SASP (Service Agreement Service Point) discovery.
 - `GetEstimatedCharges`: For real-time billing period cost estimates.
-- Sitecore JSS Layout: For parsing account hierarchy and rate plan descriptions.
+- `mobi.aps.com`: Granular usage and historical billing APIs.
+- `async_add_external_statistics`: For historical data ingestion.
