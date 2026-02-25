@@ -173,11 +173,11 @@ class APSClient:
         
         # Get the B2C Access Token from the session cookies or previous response
         # In the captured traffic, it was in the 'authorization' header as 'Bearer <token>'
-        # The token is actually returned in 'GetAllUserDetails' as 'B2C_AccessToken'
-        
-        # We need to make sure we have the token
+        # The token is actually returned in 'GetAllUserDetails' as 'B2C_AccessToken' or 'id_token'
+        # Based on traffic analysis, it uses the B2C_AccessToken
         user_details = await self.get_account_details()
-        token = user_details.get("Details", {}).get("profileData", {}).get("B2C_AccessToken")
+        profile_data = user_details.get("Details", {}).get("profileData", {})
+        token = profile_data.get("B2C_AccessToken")
         
         if not token:
             _LOGGER.warning("No B2C Access Token found")
@@ -186,6 +186,7 @@ class APSClient:
         headers = {
             "authorization": f"Bearer {token}",
             "ocp-apim-subscription-key": "d2e9aafca6d546cd9097a3e3072cd7a5", # Found in traffic
+            "x-correlation-id": "d5403e15-a418-4c52-b39a-888bf872d162", # Static for now, or generate UUID
         }
         
         params = {

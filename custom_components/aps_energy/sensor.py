@@ -138,8 +138,11 @@ class APSLatestBillSensor(APSBaseSensor):
                 "bill_due_date": bill.get("billDueDate"),
                 ATTR_BILLING_DAYS: bill.get("billPeriodbillingDays"),
                 ATTR_RATE_PLAN: rate_plan,
+                "total_payment_amount": bill.get("billTotalPaymentAmount"),
+                "ending_balance": bill.get("billEndingBalanceAmount"),
             }
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
+            _LOGGER.warning(f"Error parsing bill attributes: {e}")
             return {}
 
 
@@ -149,11 +152,7 @@ class APSEstimatedChargesSensor(APSBaseSensor):
     _attr_name = "APS Estimated Charges"
     _attr_native_unit_of_measurement = CURRENCY_DOLLAR
     _attr_device_class = SensorDeviceClass.MONETARY
-
-    def __init__(self, coordinator: APSEnergyDataUpdateCoordinator) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._estimated_data: dict[str, Any] = {}
+    _attr_state_class = SensorStateClass.TOTAL
 
     @property
     def unique_id(self) -> str:
@@ -163,13 +162,9 @@ class APSEstimatedChargesSensor(APSBaseSensor):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        # This data comes from a different endpoint in a real scenario
-        # But we saw it in the captured traffic. For now, we'll try to find it
-        # in the coordinator data if we add a call to fetch it.
         try:
-            # Check if we have estimated charges data
-            # (Note: we need to update the coordinator to fetch this too)
-            charges = self.coordinator.data.get("estimated_charges", {})
+            # Data structure based on captured traffic
+            charges = self.coordinator.data.get("estimated_charges", {}).get("getEstimatedChargesResponse", {}).get("getEstimatedChargesRes", {})
             return float(charges.get("totalChargeAmt", 0))
         except (KeyError, ValueError, TypeError):
             return None
@@ -189,6 +184,8 @@ class APSEstimatedChargesSensor(APSBaseSensor):
                 "basic_service_charge": charges.get("basicServiceChargeAmt"),
                 "adjustors_amount": charges.get("adjustorsAmt"),
                 "average_daily_cost": charges.get("avgDailyChargeAmt"),
+                "energy_charge_amount": charges.get("energyChargeAmount"),
             }
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
+            _LOGGER.warning(f"Error parsing estimated charges attributes: {e}")
             return {}
