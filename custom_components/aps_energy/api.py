@@ -32,8 +32,6 @@ HOURLY_USAGE_URL = f"{MOBI_BASE_URL}/ccb-billing/v1/gethourlyusagecharges"
 DAILY_USAGE_URL = f"{MOBI_BASE_URL}/ccb-billing/v1/getdailyusagecharges"
 BILLED_HISTORY_URL = f"{MOBI_BASE_URL}/customerhistoryservices/v1/getbilledusagehistory"
 
-OCP_APIM_KEY = "d2e9aafca6d546cd9097a3e3072cd7a5"
-
 
 class APSAuthError(Exception):
     """Authentication failed."""
@@ -56,6 +54,15 @@ def extract_rsa_key(js_content: str) -> str:
         rsa_key,
         flags=re.DOTALL,
     )
+
+
+def extract_apim_key(js_content: str) -> str:
+    """Extract the OCP_APIM_KEY from the APS JavaScript file."""
+    pattern = r'"Ocp-Apim-Subscription-Key":"([^"]+)"'
+    match = re.search(pattern, js_content)
+    if not match:
+        raise APSConnectionError("APIM Subscription Key not found in JavaScript file")
+    return match.group(1)
 
 
 def encrypt_password(rsa_key_text: str, password: str) -> str:
@@ -144,6 +151,7 @@ class APSClient:
         # Cached user details to avoid repeated GetAllUserDetails calls
         self._user_details: Optional[dict[str, Any]] = None
         self._token: Optional[str] = None
+        self._ocp_apim_key: Optional[str] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create an aiohttp session."""
@@ -157,7 +165,7 @@ class APSClient:
         """Build authorization headers for mobi.aps.com calls."""
         return {
             "authorization": f"Bearer {self._token}",
-            "ocp-apim-subscription-key": OCP_APIM_KEY,
+            "ocp-apim-subscription-key": self._ocp_apim_key or "",
             "x-correlation-id": str(uuid.uuid4()),
             "accept": "application/json",
         }
@@ -166,7 +174,7 @@ class APSClient:
         """Build authorization headers for www.aps.com/api/Services calls."""
         return {
             "authorization": f"Bearer {self._token}",
-            "ocp-apim-subscription-key": OCP_APIM_KEY,
+            "ocp-apim-subscription-key": self._ocp_apim_key or "",
             "x-correlation-id": str(uuid.uuid4()),
         }
 
@@ -187,6 +195,7 @@ class APSClient:
             raise APSConnectionError(f"Failed to fetch RSA key: {exc}") from exc
 
         rsa_key = extract_rsa_key(js_content)
+        self._ocp_apim_key = extract_apim_key(js_content)
         encrypted_password = encrypt_password(rsa_key, self.password)
 
         _LOGGER.debug("Posting credentials")
@@ -249,7 +258,7 @@ class APSClient:
 
     def _base_params(self, sa_id: str) -> dict[str, str]:
         return {
-            "account-id": self.account_id,
+            "account-id": self.account_id or "",
             "email-address": self.username,
             "user-name": self.username.split("@")[0],
             "sa-id": sa_id,
