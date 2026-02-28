@@ -1,0 +1,15 @@
+{
+    "domain": "aps_energy",
+    "name": "APS Energy",
+    "documentation": "https://github.com/your-username/aps_energy",
+    "dependencies": [],
+    "codeowners": [
+        "@your-username"
+    ],
+    "requirements": [
+        "cryptography>=42.0.2"
+    ],
+    "version": "0.1.0",
+    "iot_class": "cloud_polling",
+    "config_flow": true
+}
