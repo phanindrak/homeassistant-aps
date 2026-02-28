@@ -37,3 +37,25 @@
 - [ ] Create `rate_engine.py` to locally calculate On-Peak / Off-Peak / Super Off-Peak periods based on APS schedules without API calls.
 - [ ] Implement `sensor.aps_current_rate_period` to show the real-time ToU period for active plans.
 - [ ] Implement `sensor.aps_next_rate_change` to show a countdown to the next ToU transition.
+ 
++## Phase 4: Billing History & Advanced Analytics
++- [ ] Research: Optimized backfill start date for inactive addresses (finding last active date).
++- [ ] Research: API rate lookup for On-Peak, Off-Peak, and Super-Off-Peak per kWh prices.
++- [ ] Feature: Tracking billing period start/end dates.
++  - [ ] Sensor: Days into current billing period.
++  - [ ] Sensor: Estimated days until next billing period.
++- [ ] Feature: Billing and payment history retrieval and sensors.
++- [ ] Enhancement: Capture additional estimated charges data elements:
++  - [ ] Energy Usage Cost
++  - [ ] Energy Cost
++  - [ ] On-Peak Energy Cost
++  - [ ] Off-Peak Energy Cost
++  - [ ] Super Off-Peak Energy Cost
++  - [ ] Adjustors
++  - [ ] Taxes, Fees and Other Charges
++  - [ ] Basic Service and Other Charges
++  - [ ] Taxes and Fees
++  - [ ] Days in Billing Period
++  - [ ] Average Daily Cost
++  - [ ] Estimated Total Cost
++

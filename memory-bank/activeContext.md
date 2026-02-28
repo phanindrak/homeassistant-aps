@@ -22,3 +22,11 @@
 - [ ] Implement real-time ToU sensors (`current_rate_period`, `next_rate_change`).
 - [ ] Verify ToU calculation against all 14 APS holidays and seasonal boundaries.
 - [ ] Finalize documentation for end-users.
+ 
++## Future Roadmap Added
++- [ ] **Phase 4 (Billing & Analytics)**: New items added to the roadmap from user requests (see `TODO.md` and `memory-bank/progress.md`).
++  - Research: Optimized backfill start dates for inactive addresses.
++  - Research: Plan-specific rate lookups (per kWh).
++  - New Sensors: Billing period tracking and payment history.
++  - Enhanced Data Capture: Capturing all fields from `GetEstimatedCharges`.
++

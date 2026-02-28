@@ -14,7 +14,12 @@ A Home Assistant custom integration for monitoring energy usage, billing data, a
 - **Detailed Billing Info**:
     - **Current Balance**: Monitor your outstanding account balance.
     - **Latest Bill Sensors**: Tracks your most recent bill amount and date per service address.
-    - **Estimated Charges**: Real-time month-to-date cost estimates (for accounts with AMI meters).
+    - **Estimated Charges**: Real-time month-to-date cost estimates (including detailed items: Taxes, Fees, Adjustors, etc.).
+- **Future Release Plans**:
+    - Optimized backfill starting from the last active date.
+    - Plan-specific kWh rates for peak and off-peak periods.
+    - Billing period tracking (days into current, countdown to next).
+    - Full historical billing and payment logs.
 - **Premium UI Experience**: User-friendly multi-step configuration flow with friendly name assignment and descriptive instructions.
 - **Secure Authentication**: Uses native RSA encryption to communicate directly with APS Portal APIs.
 
@@ -26,7 +31,7 @@ A Home Assistant custom integration for monitoring energy usage, billing data, a
 │   └── aps_energy/        # Core Home Assistant integration
 ├── docs/                 # Detailed documentation and test guides
 ├── docker-compose.yml    # Standalone test environment
-├── pyproject.yml         # Dependency management (Poetry)
+├── pyproject.toml        # Dependency management (Poetry)
 └── poetry.lock
 ```
 

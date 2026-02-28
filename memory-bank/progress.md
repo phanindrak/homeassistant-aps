@@ -31,8 +31,16 @@
 - [ ] Current Rate / Period real-time sensors.
 - [ ] Countdown to next rate changes.
 
+### [ ] Phase 4: Billing Improvements & Analytics
+- [ ] Research: Optimization of backfill date for inactive addresses.
+- [ ] Research: API rate lookup (On-Peak/Off-Peak/Super-Off-Peak per kWh).
+- [ ] Tracking of billing period dates and duration.
+- [ ] Billing & account payment history retrieval.
+- [ ] Capture additional `GetEstimatedCharges` data elements (Adjustors, Taxes, etc.).
+
 ## Status Summary
-- **Total Progress**: ~85%
+- **Total Progress**: ~80%
 - **Core Platform**: Complete ✅
 - **Historical Data**: Integrated ✅
 - **Real-time ToU**: In Planning 🛠️
+- **Future Enhancements**: Queued 📋
