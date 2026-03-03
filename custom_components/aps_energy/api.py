@@ -198,7 +198,7 @@ class APSClient:
         self._ocp_apim_key = extract_apim_key(js_content)
         encrypted_password = encrypt_password(rsa_key, self.password)
 
-        _LOGGER.debug("Posting credentials")
+        _LOGGER.debug("Posting credentials to %s", AUTH_URL)
         try:
             async with session.post(
                 AUTH_URL, json={"username": self.username, "password": encrypted_password}
@@ -208,6 +208,12 @@ class APSClient:
                 login_result = json.loads(text)
         except (aiohttp.ClientError, json.JSONDecodeError) as exc:
             raise APSConnectionError(f"Authentication request failed: {exc}") from exc
+
+        _LOGGER.debug(
+            "Auth response (isLoginSuccess=%s): %s",
+            login_result.get("isLoginSuccess"),
+            json.dumps({k: v for k, v in login_result.items() if k != "password"}, indent=2, default=str),
+        )
 
         if not login_result.get("isLoginSuccess", False):
             raise APSAuthError("Username and password failed")
@@ -227,12 +233,20 @@ class APSClient:
     async def _fetch_user_details(self) -> dict[str, Any]:
         """Fetch GetAllUserDetails and cache token and details."""
         session = await self._get_session()
+        _LOGGER.debug("GET %s", USER_DETAILS_URL)
         try:
             async with session.get(USER_DETAILS_URL) as resp:
                 resp.raise_for_status()
                 data = await resp.json(content_type=None)
         except aiohttp.ClientError as exc:
             raise APSConnectionError(f"Failed to fetch account details: {exc}") from exc
+
+        if data is None:
+            raise APSConnectionError(
+                "GetAllUserDetails returned an empty response — session may have expired"
+            )
+
+        _LOGGER.debug("GetAllUserDetails response: %s", json.dumps(data, indent=2, default=str))
 
         # Cache the details and extract the B2C token
         self._user_details = data
@@ -273,6 +287,7 @@ class APSClient:
 
         session = await self._get_session()
         params = self._base_params(sa_id)
+        _LOGGER.debug("GET %s  params=%s", ESTIMATED_CHARGES_URL, params)
 
         try:
             async with session.get(
@@ -281,10 +296,16 @@ class APSClient:
                 headers=self._dashboard_headers(),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json(content_type=None)
+                data = await resp.json(content_type=None)
         except aiohttp.ClientError as exc:
             _LOGGER.error("Failed to fetch estimated charges for sa_id=%s: %s", sa_id, exc)
             return {}
+
+        _LOGGER.debug(
+            "GetEstimatedCharges response (sa_id=%s): %s",
+            sa_id, json.dumps(data, indent=2, default=str),
+        )
+        return data if data is not None else {}
 
     async def get_daily_usage(
         self,
@@ -305,6 +326,7 @@ class APSClient:
             "sAID": sa_id,
             "spId": sp_id,
         }
+        _LOGGER.debug("GET %s  params=%s", DAILY_USAGE_URL, params)
         try:
             async with session.get(
                 DAILY_USAGE_URL,
@@ -312,10 +334,16 @@ class APSClient:
                 headers=self._mobi_headers(),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json(content_type=None)
+                data = await resp.json(content_type=None)
         except aiohttp.ClientError as exc:
             _LOGGER.error("Failed to fetch daily usage for sa_id=%s: %s", sa_id, exc)
             return {}
+
+        _LOGGER.debug(
+            "GetDailyUsageCharges response (sa_id=%s): %s",
+            sa_id, json.dumps(data, indent=2, default=str),
+        )
+        return data if data is not None else {}
 
     async def get_hourly_usage(
         self,
@@ -334,6 +362,7 @@ class APSClient:
             "sAID": sa_id,
             "spId": sp_id,
         }
+        _LOGGER.debug("GET %s  params=%s", HOURLY_USAGE_URL, params)
         try:
             async with session.get(
                 HOURLY_USAGE_URL,
@@ -341,10 +370,16 @@ class APSClient:
                 headers=self._mobi_headers(),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json(content_type=None)
+                data = await resp.json(content_type=None)
         except aiohttp.ClientError as exc:
             _LOGGER.error("Failed to fetch hourly usage for sa_id=%s: %s", sa_id, exc)
             return {}
+
+        _LOGGER.debug(
+            "GetHourlyUsageCharges response (sa_id=%s, date=%s): %s",
+            sa_id, usage_date, json.dumps(data, indent=2, default=str),
+        )
+        return data if data is not None else {}
 
     async def get_billed_usage_history(
         self,
@@ -363,6 +398,7 @@ class APSClient:
             "start-date": start_date.strftime("%Y-%m-%d"),
             "end-date": end_date.strftime("%Y-%m-%d"),
         }
+        _LOGGER.debug("GET %s  params=%s", BILLED_HISTORY_URL, params)
         try:
             async with session.get(
                 BILLED_HISTORY_URL,
@@ -370,10 +406,16 @@ class APSClient:
                 headers=self._mobi_headers(),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json(content_type=None)
+                data = await resp.json(content_type=None)
         except aiohttp.ClientError as exc:
             _LOGGER.error("Failed to fetch billed usage history for sa_id=%s: %s", sa_id, exc)
             return {}
+
+        _LOGGER.debug(
+            "GetBilledUsageHistory response (sa_id=%s): %s",
+            sa_id, json.dumps(data, indent=2, default=str),
+        )
+        return data if data is not None else {}
 
     # ------------------------------------------------------------------
     # Session management
@@ -381,7 +423,7 @@ class APSClient:
 
     async def close(self) -> None:
         """Close the session if we created it."""
-        if self._close_session and self._session:
+        if self and self._close_session and self._session:
             await self._session.close()
             self._session = None
 

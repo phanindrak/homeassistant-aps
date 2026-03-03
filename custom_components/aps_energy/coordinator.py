@@ -18,6 +18,32 @@ ACTIVE_SCAN_INTERVAL = timedelta(minutes=30)
 INACTIVE_SCAN_INTERVAL = timedelta(hours=24)
 
 
+def _billing_cycle_start(estimated_charges: dict[str, Any], today: date) -> date:
+    """Return the start date of the current billing cycle.
+
+    Calculates the start date using the 'billingDays' field from the
+    estimated charges response. Falls back to the 1st of the current month
+    if unavailable.
+    """
+    try:
+        # The getEstimatedCharges response wraps data under these keys
+        res = (
+            estimated_charges
+            .get("getEstimatedChargesResponse", estimated_charges)
+            .get("getEstimatedChargesRes", estimated_charges)
+        )
+        billing_days_str = res.get("billingDays")
+        if billing_days_str:
+            billing_days = int(billing_days_str)
+            if billing_days > 0:
+                # If we are 5 days into the billing period including today, start date was 4 days ago
+                return today - timedelta(days=billing_days - 1)
+    except (AttributeError, ValueError, TypeError):
+        pass
+    # Safe fallback: 1st of the current month
+    return today.replace(day=1)
+
+
 class APSAddressCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for a single monitored APS service address."""
 
@@ -61,7 +87,8 @@ class APSAddressCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     address_meta = addr
                     break
 
-            # Estimated charges — only meaningful for active addresses
+            # Estimated charges — only meaningful for active addresses.
+            # Fetch this first so we can derive the billing cycle start date.
             estimated_charges: dict[str, Any] = {}
             if self.is_active:
                 try:
@@ -74,13 +101,17 @@ class APSAddressCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         self.friendly_name, exc,
                     )
 
-            # Daily usage for the last ~35 days (covers current billing cycle)
+            # Daily usage — must stay within the current billing cycle.
+            # The APS getdailyusagecharges API returns 500 when the requested
+            # date range spans more than one billing period. We derive the
+            # cycle start from the estimated charges payload; if that is not
+            # available we fall back to the 1st of the current month.
             today = date.today()
-            thirty_five_ago = today - timedelta(days=35)
+            cycle_start = _billing_cycle_start(estimated_charges, today)
             daily_usage: dict[str, Any] = {}
             try:
                 daily_usage = await self.client.get_daily_usage(
-                    self.sa_id, self.sp_id, thirty_five_ago, today
+                    self.sa_id, self.sp_id, cycle_start, today
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.warning(

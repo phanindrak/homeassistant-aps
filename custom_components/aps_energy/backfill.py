@@ -249,27 +249,23 @@ def _parse_billing_cycles(history_resp: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse billing cycle date ranges from getbilledusagehistory response.
 
     Returns list of dicts with 'start_date', 'end_date', 'total_kwh'.
-    NOTE: Update the key paths below once the real API response is inspected.
     """
     cycles = []
     try:
-        # Attempt common patterns based on APS API naming conventions
-        data = history_resp
-        # Unwrap common top-level wrapper if present
-        for key in ("getBilledUsageHistoryResponse", "billedUsageHistory", "history"):
-            if key in data:
-                data = data[key]
-                break
-
-        for entry in (data if isinstance(data, list) else data.get("billingCycles", [])):
-            start_str = entry.get("startDate") or entry.get("billStartDate") or entry.get("start_date")
-            end_str = entry.get("endDate") or entry.get("billEndDate") or entry.get("end_date")
+        data = (
+            history_resp
+            .get("getBilledUsageHistoryResponse", {})
+            .get("getBilledUsageHistoryRes", {})
+        )
+        for entry in data.get("bills", []):
+            start_str = entry.get("billCycleStartDate")
+            end_str = entry.get("billCycleEndDate")
             if start_str and end_str:
                 try:
                     cycles.append({
                         "start_date": date.fromisoformat(start_str[:10]),
                         "end_date": date.fromisoformat(end_str[:10]),
-                        "total_kwh": float(entry.get("totalKwh") or entry.get("usage") or 0),
+                        "total_kwh": float(entry.get("totalUsg") or 0),
                     })
                 except (ValueError, TypeError):
                     pass

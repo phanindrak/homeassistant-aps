@@ -23,7 +23,9 @@ test_config/
 *.swp
 *.swo
 *~
+.agent
 
 # OS
 .DS_Store
 Thumbs.db
+
