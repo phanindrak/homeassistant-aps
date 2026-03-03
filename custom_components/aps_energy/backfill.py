@@ -130,14 +130,34 @@ async def backfill_address(
         # --- Step 2: Fetch daily usage for this billing cycle ---
         try:
             daily_resp = await client.get_daily_usage(sa_id, sp_id, cycle_start, cycle_end)
+            daily_readings = _parse_daily_readings(daily_resp)
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.warning(
                 "Backfill: could not fetch daily usage for %s cycle %s–%s: %s",
                 friendly_name, cycle_start, cycle_end, exc,
             )
-            continue
+            daily_readings = []
 
-        daily_readings = _parse_daily_readings(daily_resp)
+        if not daily_readings:
+            # Fallback: evenly distribute the monthly total across the days in the cycle
+            cycle_days = (cycle_end - cycle_start).days
+            if cycle_days > 0:
+                _LOGGER.info(
+                    "Backfill: %s — falling back to synthetic daily average for cycle %s–%s",
+                    friendly_name, cycle_start, cycle_end
+                )
+                total = cycle.get("total_kwh", 0.0)
+                daily_avg_kwh = total / cycle_days
+                for day_offset in range(cycle_days):
+                    synthetic_date = cycle_start + timedelta(days=day_offset)
+                    daily_readings.append({
+                        "date": synthetic_date,
+                        "kwh": daily_avg_kwh,
+                        "cost": 0.0,
+                        "on_peak_kwh": 0.0,
+                        "off_peak_kwh": 0.0,
+                        "super_off_peak_kwh": 0.0,
+                    })
 
         for reading in daily_readings:
             period_start = _date_to_utc_datetime(reading["date"])
